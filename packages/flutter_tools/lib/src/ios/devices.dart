@@ -265,6 +265,9 @@ class IOSDevice extends Device {
     bool usesTerminalUi = true,
     bool ipv6 = false,
   }) async {
+
+    String packageId;
+
     if (!prebuiltApplication) {
       // TODO(chinmaygarde): Use mainPath, route.
       printTrace('Building ${package.name} for $id');
@@ -287,10 +290,13 @@ class IOSDevice extends Device {
         printError('');
         return LaunchResult.failed();
       }
+      packageId = buildResult.xcodeBuildExecution?.buildSettings['PRODUCT_BUNDLE_IDENTIFIER'];
     } else {
       if (!await installApp(package))
         return LaunchResult.failed();
     }
+
+    packageId ??= package.id;
 
     // Step 2: Check that the application exists at the specified path.
     final IOSApp iosApp = package;
@@ -387,7 +393,7 @@ class IOSDevice extends Device {
       try {
         printTrace('Application launched on the device. Waiting for observatory port.');
         localUri = await MDnsObservatoryDiscovery.instance.getObservatoryUri(
-          package.id,
+          packageId,
           this,
           ipv6,
           debuggingOptions.observatoryPort,
